@@ -25,9 +25,8 @@ jobs:
           
       - name: Fetch and analyze image
         env:
-          FLICKR_API_KEY: ${{ secrets.FLICKR_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
-        run: python scripts/fetch_image.py
+        run: python fetch_image.py
         
       - name: Commit and push changes
         run: |

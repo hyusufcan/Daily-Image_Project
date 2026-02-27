@@ -1,82 +1,132 @@
+#!/usr/bin/env python3
+"""
+Fetch a random historical image from Wikimedia Commons
+and analyze it using HuggingFace's LLaVA model.
+
+Wikimedia Commons provides FREE access to millions of historical images
+including the British Library collection - perfect for Victorian-era imagery.
+NO API KEY NEEDED for Wikimedia!
+"""
+
 import os
 import json
 import requests
 import random
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
 
-# Flickr API yapılandırması
-FLICKR_API_KEY = os.getenv('FLICKR_API_KEY')
-FLICKR_USER_ID = '12403504@N02'  # British Library Flickr ID
+load_dotenv()
+
+# Only HuggingFace API key needed
 HF_API_KEY = os.getenv('HF_API_KEY')
-
-# Hugging Face LLaVA API
 LLAVA_API_URL = "https://api-inference.huggingface.co/models/llava-hf/llava-1.5-7b-hf"
 
+
 def get_random_photo():
-    """Flickr'dan rastgele bir fotoğraf çek"""
+    """
+    Fetch a random historical image from Wikimedia Commons.
+    Completely FREE - no API key needed!
+    """
     
-    # British Library koleksiyonundan fotoğrafları al
-    url = "https://api.flickr.com/services/rest/"
-    params = {
-        'method': 'flickr.people.getPublicPhotos',
-        'api_key': FLICKR_API_KEY,
-        'user_id': FLICKR_USER_ID,
-        'per_page': 500,  # Fazla sayıda çek ki rastgele seçim yapabiliriz
-        'format': 'json',
-        'nojsoncallback': 1,
-        'extras': 'url_o,url_l,description,date_taken,tags'
-    }
-    
-    response = requests.get(url, params=params)
-    data = response.json()
-    
-    if 'photos' not in data or not data['photos']['photo']:
-        raise Exception("Fotoğraf bulunamadı")
-    
-    # Rastgele bir fotoğraf seç
-    photos = data['photos']['photo']
-    photo = random.choice(photos)
-    
-    # En yüksek kaliteli URL'yi al
-    image_url = photo.get('url_o') or photo.get('url_l')
-    
-    return {
-        'id': photo['id'],
-        'title': photo.get('title', 'Untitled'),
-        'description': photo.get('description', {}).get('_content', ''),
-        'url': image_url,
-        'flickr_url': f"https://www.flickr.com/photos/{FLICKR_USER_ID}/{photo['id']}",
-        'date_taken': photo.get('datetaken', ''),
-        'tags': photo.get('tags', '')
-    }
+    try:
+        url = "https://commons.wikimedia.org/w/api.php"
+        
+        # Step 1: Get random files from Wikimedia Commons
+        params = {
+            'action': 'query',
+            'list': 'random',
+            'rnnamespace': '6',  # File namespace (images)
+            'rnlimit': '500',
+            'format': 'json'
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        
+        random_files = response.json()['query']['random']
+        if not random_files:
+            raise Exception("No files found in Wikimedia Commons")
+        
+        # Step 2: Get detailed file information
+        file_titles = [f['title'] for f in random_files[:100]]
+        
+        file_info_params = {
+            'action': 'query',
+            'titles': '|'.join(file_titles),
+            'prop': 'imageinfo|pageterms|descriptions',
+            'iiprop': 'url|timestamp|user|extmetadata',
+            'format': 'json'
+        }
+        
+        info_response = requests.get(url, params=file_info_params, timeout=10)
+        info_response.raise_for_status()
+        
+        pages = info_response.json()['query']['pages']
+        
+        # Filter for valid images
+        valid_images = [
+            p for p in pages.values() 
+            if 'imageinfo' in p and p['imageinfo'][0]['url'].lower().endswith(
+                ('.jpg', '.jpeg', '.png', '.gif')
+            )
+        ]
+        
+        if not valid_images:
+            raise Exception("No valid images found")
+        
+        selected = random.choice(valid_images)
+        img_info = selected['imageinfo'][0]
+        
+        # Extract metadata
+        title = selected['title'].replace('File:', '').replace('_', ' ')
+        description = selected.get('pageterms', {}).get('description', ['No description available'])[0]
+        
+        return {
+            'id': selected.get('pageid'),
+            'title': title,
+            'description': description,
+            'url': img_info['url'],  # Direct image URL
+            'source_url': f"https://commons.wikimedia.org/wiki/{selected['title'].replace(' ', '_')}",
+            'date_taken': img_info.get('timestamp', 'Unknown'),
+            'uploader': img_info.get('user', 'Unknown'),
+            'source': 'Wikimedia Commons',
+            'tags': 'historical,public-domain'
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching from Wikimedia Commons: {e}")
+        return None
 
 def analyze_image_with_llava(image_url):
-    """LLaVA ile görüntü analizi yap"""
+    """Analyze image with HuggingFace LLaVA AI"""
     
-    # Analiz için prompt
-    prompt = """Analyze this historical image from the British Library collection. Provide:
+    if not HF_API_KEY:
+        print("⚠️ Warning: HF_API_KEY not set! Using fallback analysis...")
+        return {
+            'analysis': 'A fascinating glimpse into history from public domain archives.',
+            'model': 'fallback',
+            'analyzed_at': datetime.now().isoformat()
+        }
+    
+    prompt = """Analyze this historical image from Wikimedia Commons archives. Provide:
 
-1. **Visual Description**: What do you see in the image? Describe the scene, people, objects, and setting in detail.
+1. **Visual Description**: What do you see? Describe the scene, people, objects, and setting in detail.
 
-2. **Historical Context**: Based on visual clues (clothing, architecture, objects, style), estimate the time period and geographical location.
+2. **Historical Context**: Based on visual clues (clothing, architecture, objects, style), estimate the time period and location.
 
-3. **Artistic Elements**: Describe the composition, technique (engraving, photograph, illustration), and artistic style.
+3. **Artistic Elements**: Describe the composition, technique, and artistic style.
 
-4. **Cultural Significance**: What might this image tell us about the society, culture, or technology of its time?
+4. **Cultural Significance**: What does this image tell us about the society, culture, or technology of its time?
 
 5. **Mood & Atmosphere**: What emotions or atmosphere does this image evoke?
 
-Provide a rich, scholarly analysis as if you were a Victorian-era librarian cataloging this treasure."""
+Provide a scholarly, Victorian-era librarian analysis."""
 
     headers = {
         "Authorization": f"Bearer {HF_API_KEY}"
     }
     
-    # Görüntüyü indir
-    img_response = requests.get(image_url)
-    
-    # LLaVA API'ye gönder
     payload = {
         "inputs": {
             "image": image_url,
@@ -84,67 +134,87 @@ Provide a rich, scholarly analysis as if you were a Victorian-era librarian cata
         }
     }
     
-    response = requests.post(LLAVA_API_URL, headers=headers, json=payload)
-    
-    if response.status_code != 200:
-        # Fallback: Basit bir analiz
+    try:
+        response = requests.post(LLAVA_API_URL, headers=headers, json=payload, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            return {
+                'analysis': result[0].get('generated_text', 'Analysis completed'),
+                'model': 'llava-1.5-7b-hf',
+                'analyzed_at': datetime.now().isoformat()
+            }
+        else:
+            print(f"⚠️ API returned status {response.status_code}")
+            return {
+                'analysis': 'Image analysis temporarily unavailable.',
+                'model': 'fallback',
+                'analyzed_at': datetime.now().isoformat()
+            }
+            
+    except Exception as e:
+        print(f"❌ Error in AI analysis: {e}")
         return {
-            'analysis': 'A fascinating glimpse into history from the British Library archives.',
-            'model': 'fallback'
+            'analysis': 'A remarkable historical image worthy of scholarly study.',
+            'model': 'fallback',
+            'analyzed_at': datetime.now().isoformat()
         }
-    
-    result = response.json()
-    
-    return {
-        'analysis': result.get('generated_text', result),
-        'model': 'llava-1.5-7b-hf',
-        'analyzed_at': datetime.now().isoformat()
-    }
 
 def save_daily_data(photo_data, analysis_data):
-    """Günlük veriyi JSON olarak kaydet"""
+    """Save daily image data to JSON"""
     
-    # Dizinleri oluştur (public altına)
+    # Create directories
     Path('public/data').mkdir(parents=True, exist_ok=True)
-    Path('public/images').mkdir(parents=True, exist_ok=True)
     
-    # Görüntüyü indir ve kaydet
-    img_response = requests.get(photo_data['url'])
-    image_filename = f"daily-{datetime.now().strftime('%Y-%m-%d')}.jpg"
+    # Download and save image
+    try:
+        img_response = requests.get(photo_data['url'], timeout=10)
+        img_response.raise_for_status()
+        
+        image_filename = f"daily-{datetime.now().strftime('%Y-%m-%d')}.jpg"
+        Path('public/images').mkdir(parents=True, exist_ok=True)
+        
+        with open(f'public/images/{image_filename}', 'wb') as f:
+            f.write(img_response.content)
+            
+        local_image = f'images/{image_filename}'
+        
+    except Exception as e:
+        print(f"⚠️ Could not download image: {e}")
+        local_image = None
     
-    with open(f'public/images/{image_filename}', 'wb') as f:
-        f.write(img_response.content)
-    
-    # JSON verisi
+    # Prepare daily data
     daily_data = {
         'date': datetime.now().strftime('%Y-%m-%d'),
         'photo': {
             'id': photo_data['id'],
             'title': photo_data['title'],
             'description': photo_data['description'],
-            'flickr_url': photo_data['flickr_url'],
+            'source_url': photo_data['source_url'],
             'date_taken': photo_data['date_taken'],
-            'tags': photo_data['tags'],
-            'local_image': f'images/{image_filename}'
+            'uploader': photo_data['uploader'],
+            'source': photo_data['source'],
+            'local_image': local_image
         },
         'ai_analysis': analysis_data,
         'generated_at': datetime.now().isoformat()
     }
     
-    # Güncel veriyi kaydet (public/data altına)
-    with open('public/data/daily-image.json', 'w', encoding='utf-8') as f:
+    # Save current day's data
+    json_path = Path('public/data/daily-image.json')
+    with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(daily_data, f, indent=2, ensure_ascii=False)
     
-    # Arşive ekle (public/data altına)
-    archive_file = 'public/data/archive.json'
+    # Update archive (last 30 days)
+    archive_file = Path('public/data/archive.json')
     archive = []
     
-    if os.path.exists(archive_file):
+    if archive_file.exists():
         with open(archive_file, 'r', encoding='utf-8') as f:
             archive = json.load(f)
     
-    archive.insert(0, daily_data)  # En yeni başta
-    archive = archive[:30]  # Son 30 günü tut
+    archive.insert(0, daily_data)  # Newest first
+    archive = archive[:30]  # Keep only last 30 days
     
     with open(archive_file, 'w', encoding='utf-8') as f:
         json.dump(archive, f, indent=2, ensure_ascii=False)
@@ -152,14 +222,15 @@ def save_daily_data(photo_data, analysis_data):
     print(f"✅ Daily image saved: {photo_data['title']}")
 
 def main():
+    """Main execution"""
     try:
-        if not FLICKR_API_KEY:
-            # Fallback for manual run without API key (only if we wanted to test, but let's encourage setting it)
-            # For now just print warning
-            print("⚠️ Warning: FLICKR_API_KEY not set!")
-            
-        print("🔍 Fetching random image from British Library...")
+        print("🔍 Fetching random historical image from Wikimedia Commons...")
         photo = get_random_photo()
+        
+        if not photo:
+            print("❌ Failed to fetch image")
+            return
+        
         print(f"📸 Found: {photo['title']}")
         
         print("🤖 Analyzing with LLaVA AI...")
@@ -168,11 +239,12 @@ def main():
         
         print("💾 Saving data...")
         save_daily_data(photo, analysis)
-        print("🎉 Done!")
+        print("🎉 Done! Website updated.")
         
     except Exception as e:
         print(f"❌ Error: {e}")
         raise
+
 
 if __name__ == "__main__":
     main()

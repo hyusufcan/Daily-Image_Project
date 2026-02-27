@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-02-27",
+    "photo": {
+      "id": "51086240360",
+      "title": "The Great Exhibition, Crystal Palace, 1851",
+      "description": "A magnificent stereoview of the Great Exhibition",
+      "flickr_url": "https://www.flickr.com/photos/12403504@N02/51086240360/",
+      "date_taken": "1851-05-01",
+      "tags": "victorian exhibition crystal palace"
+    },
+    "ai_analysis": {
+      "analysis": "A revolutionary architectural achievement of the Victorian era...",
+      "model": "llava-1.5-7b-hf"
+    }
+  },
+  {
+    "date": "2026-02-26",
+    "photo": {
+      "id": "51086240359",
+      "title": "Victorian Street Scene, London 1890s",
+      "description": "A bustling street scene from Victorian London",
+      "flickr_url": "https://www.flickr.com/photos/12403504@N02/51086240359/",
+      "date_taken": "1890-06-15",
+      "tags": "victorian london street photography"
+    },
+    "ai_analysis": {
+      "analysis": "This photograph captures the vibrant urban life of Victorian London...",
+      "model": "llava-1.5-7b-hf"
+    }
+  },
+  {
+    "date": "2026-02-25",
+    "photo": {
+      "id": "51086240358",
+      "title": "Historical Manuscript Illumination",
+      "description": "A beautifully preserved medieval manuscript",
+      "flickr_url": "https://www.flickr.com/photos/12403504@N02/51086240358/",
+      "date_taken": "1450-01-01",
+      "tags": "medieval manuscript illuminated"
+    },
+    "ai_analysis": {
+      "analysis": "This illuminated manuscript represents the pinnacle of medieval artistry...",
+      "model": "llava-1.5-7b-hf"
+    }
+  }
+]

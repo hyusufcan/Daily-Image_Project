@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>The Daily Antiquarian | Archives of the British Library</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#d5b034",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#1a1614",
+                        "charcoal": "#1a1614",
+                        "parchment": "#f4e9d8",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            background-color: #1a1614;
+            /* Subtle damask pattern simulation */
+            background-image: radial-gradient(#2a2522 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        
+        .gold-border-double {
+            border: 4px double #d5b034;
+        }
+
+        .bookplate-gradient {
+            background: linear-gradient(145deg, #2a2522, #1a1614);
+        }
+
+        .drop-cap::first-letter {
+            float: left;
+            font-size: 4.5rem;
+            line-height: 1;
+            padding-right: 0.75rem;
+            color: #d5b034;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(213, 176, 52, 0.3);
+        }
+
+        .ornamental-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #d5b034, transparent);
+        }
+
+        .fleur-de-lis {
+            font-size: 24px;
+            color: #d5b034;
+        }
+
+        .sepia-frame {
+            box-shadow: 0 0 0 4px #4a3728, 0 0 0 6px #d5b034;
+        }
+
+        .inner-shadow {
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(213, 176, 52, 0.3);
+            border-top-color: #d5b034;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="font-display text-white/90 selection:bg-primary/30 selection:text-primary">
+    <div class="min-h-screen flex flex-col items-center py-12 px-4 bg-background-light dark:bg-background-dark">
+        <!-- Hero Section -->
+        <header class="w-full max-w-5xl text-center mb-16">
+            <div class="inline-block p-8 gold-border-double mb-6 bg-black/20 backdrop-blur-sm">
+                <h1 class="text-4xl md:text-6xl font-light tracking-[0.4em] text-primary uppercase leading-tight drop-shadow-lg">
+                    THE DAILY ANTIQUARIAN
+                </h1>
+            </div>
+            <p class="text-xl md:text-2xl italic text-primary/70 font-display mt-4">
+                A Daily Curation from the British Library Archives
+            </p>
+            <div class="mt-8 flex items-center justify-center gap-4">
+                <div class="ornamental-line w-24"></div>
+                <span class="text-primary tracking-widest uppercase text-xs" id="anno-display">Anno MMXXIV</span>
+                <div class="ornamental-line w-24"></div>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-20">
+            <div class="loading-spinner mb-6"></div>
+            <p class="text-primary/70 italic">Retrieving today's treasure from the archives...</p>
+        </div>
+
+        <!-- Main Content Card (The Bookplate) -->
+        <main id="main-content" class="w-full max-w-6xl mb-24 hidden opacity-0 transition-opacity duration-1000">
+            <div class="relative bookplate-gradient p-1 bg-primary/20 rounded-sm shadow-2xl border border-primary/30">
+                <!-- Corner Ornaments -->
+                <div class="absolute -top-3 -left-3 p-1 bg-charcoal border border-primary/40 rounded-sm">
+                    <span class="material-icons fleur-de-lis">filter_vintage</span>
+                </div>
+                <div class="absolute -top-3 -right-3 p-1 bg-charcoal border border-primary/40 rounded-sm">
+                    <span class="material-icons fleur-de-lis">filter_vintage</span>
+                </div>
+                <div class="absolute -bottom-3 -left-3 p-1 bg-charcoal border border-primary/40 rounded-sm">
+                    <span class="material-icons fleur-de-lis">filter_vintage</span>
+                </div>
+                <div class="absolute -bottom-3 -right-3 p-1 bg-charcoal border border-primary/40 rounded-sm">
+                    <span class="material-icons fleur-de-lis">filter_vintage</span>
+                </div>
+
+                <!-- Card Content -->
+                <div class="border-2 border-primary/40 p-10 md:p-16 relative overflow-hidden">
+                    <!-- Top Metadata -->
+                    <div class="flex flex-col md:flex-row justify-between items-baseline mb-12 border-b border-primary/20 pb-4">
+                        <div>
+                            <span class="text-xs uppercase tracking-widest text-primary/60">Accession No.</span>
+                            <p class="text-lg font-light text-primary" id="accession-no">Loading...</p>
+                        </div>
+                        <div class="text-center md:text-right mt-4 md:mt-0">
+                            <span class="text-xs uppercase tracking-widest text-primary/60">Dated</span>
+                            <p class="text-lg font-light text-primary" id="display-date">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Image Display Area -->
+                    <div class="mb-16 flex justify-center">
+                        <div class="relative group max-w-full">
+                            <div class="sepia-frame overflow-hidden bg-charcoal relative">
+                                <img id="daily-image" alt="Historical image" class="w-full h-auto max-h-[600px] object-cover mix-blend-normal grayscale-0 sepia-[.3] contrast-125 opacity-90 hover:opacity-100 transition-all duration-700" src="" />
+                                <div class="absolute inset-0 bg-primary/10 mix-blend-overlay pointer-events-none"></div>
+                                <div class="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] pointer-events-none"></div>
+                            </div>
+                            
+                            <!-- Image Caption -->
+                            <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-charcoal px-6 py-2 border border-primary/40 whitespace-nowrap z-10 max-w-[90vw] overflow-hidden text-ellipsis">
+                                <span class="text-xs italic tracking-widest text-primary/80" id="image-caption">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Librarian's Analysis Area -->
+                    <div class="mt-20">
+                        <div class="flex items-center gap-6 mb-8">
+                            <h2 class="text-2xl text-primary font-light tracking-widest uppercase">Librarian's Analysis</h2>
+                            <div class="flex-grow h-px bg-primary/20"></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 text-lg leading-relaxed text-white/70">
+                            <div class="drop-cap italic" id="analysis-col-1">
+                                <!-- First part of analysis goes here -->
+                            </div>
+                            <div class="font-light" id="analysis-col-2">
+                                <!-- Second part of analysis goes here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Section -->
+                    <div class="mt-16 flex flex-col items-center">
+                        <div class="ornamental-line w-full mb-12 opacity-30"></div>
+                        <a id="view-original-btn" href="#" target="_blank" class="group relative px-12 py-4 bg-primary text-charcoal font-bold tracking-widest uppercase transition-all hover:bg-white hover:shadow-[0_0_25px_rgba(213,176,52,0.5)] active:scale-95 inline-block text-center decoration-0">
+                            View Original Source
+                            <div class="absolute -inset-1 border border-primary group-hover:-inset-2 transition-all"></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer (Catalog Card Style) -->
+        <footer class="w-full max-w-4xl" id="footer-card">
+            <div class="bg-parchment p-8 text-charcoal/80 rounded-sm shadow-xl relative overflow-hidden">
+                <!-- Hole punch effect -->
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full border border-charcoal/20 bg-background-dark shadow-inner"></div>
+                
+                <div class="flex flex-col md:flex-row justify-between mb-8 border-b border-charcoal/20 pb-4">
+                    <div class="space-y-1">
+                        <p class="text-xs uppercase font-bold tracking-tighter opacity-60">Catalogue Index</p>
+                        <p class="text-2xl font-serif" id="catalog-index">A-342.09 / History</p>
+                    </div>
+                    <div class="text-right mt-4 md:mt-0">
+                        <p class="text-xs uppercase font-bold tracking-tighter opacity-60">Status</p>
+                        <p class="text-xl italic">In Circulation (Restricted)</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm font-serif">
+                    <div>
+                        <span class="block font-bold opacity-60 text-[10px] uppercase">Curator</span>
+                        <p id="curator-name">AI Curator</p>
+                    </div>
+                    <div>
+                        <span class="block font-bold opacity-60 text-[10px] uppercase">Shelf Location</span>
+                        <p>Vault 4, Row G-12</p>
+                    </div>
+                    <div>
+                        <span class="block font-bold opacity-60 text-[10px] uppercase">Archives</span>
+                        <p>St. Pancras, London</p>
+                    </div>
+                    <div>
+                        <span class="block font-bold opacity-60 text-[10px] uppercase">Tags</span>
+                        <p id="footer-tags" class="truncate">...</p>
+                    </div>
+                </div>
+                
+                <div class="mt-12 flex justify-between items-end">
+                    <div class="flex gap-4">
+                        <a class="text-charcoal/60 hover:text-primary transition-colors" href="#"><span class="material-icons">share</span></a>
+                        <a class="text-charcoal/60 hover:text-primary transition-colors" href="#"><span class="material-icons">bookmark_border</span></a>
+                        <a class="text-charcoal/60 hover:text-primary transition-colors" href="#"><span class="material-icons">print</span></a>
+                    </div>
+                    <p class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-40">The Daily Antiquarian © 1887-2024</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-primary/40 text-xs tracking-widest uppercase">
+                Explore the Labyrinths of History
+            </div>
+        </footer>
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        async function loadDailyImage() {
+            try {
+                // Fetch the JSON data
+                const response = await fetch('data/daily-image.json');
+                const data = await response.json();
+                
+                displayContent(data);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading-state').innerHTML = `
+                    <div class="text-red-400 text-xl font-serif">⚠ Unable to retrieve today's treasure</div>
+                    <p class="mt-2 text-primary/60">The archives appear to be momentarily inaccessible.</p>
+                `;
+            }
+        }
+
+        function displayContent(data) {
+            // 1. Set Dates
+            const date = new Date(data.date);
+            const formattedDate = date.toLocaleDateString('en-GB', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            // Set Anno Year
+            document.getElementById('anno-display').textContent = `Anno ${toRoman(date.getFullYear())}`;
+            
+            // Set Dated Field
+            document.getElementById('display-date').textContent = formattedDate;
+
+            // 2. Set Accession Number (Fake it using ID)
+            const accession = `MSS-${data.photo.id.substr(0,4)}-${data.photo.id.substr(4,4)}`;
+            document.getElementById('accession-no').textContent = accession;
+            document.getElementById('catalog-index').textContent = `${data.photo.id} / Visual`;
+
+            // 3. Set Image
+            const imgEl = document.getElementById('daily-image');
+            imgEl.src = data.photo.local_image || data.photo.url;
+            imgEl.alt = data.photo.title;
+
+            // 4. Set Title/Caption
+            document.getElementById('image-caption').textContent = data.photo.title || 'Untitled Work';
+
+            // 5. Analysis
+            let analysisText = "";
+            let description = data.photo.description ? `<p><strong>Original Description:</strong> ${data.photo.description}</p>` : "";
+
+            if (typeof data.ai_analysis.analysis === 'string') {
+                analysisText = data.ai_analysis.analysis;
+            } else {
+                // Handle case where analysis might be an object
+                analysisText = JSON.stringify(data.ai_analysis.analysis);
+            }
+
+            // Split analysis into paragraphs
+            const paragraphs = analysisText.split('\n\n').filter(p => p.trim());
+            
+            // Split into two columns
+            // First paragraph goes to col 1 (Drop Cap), rest to col 2
+            if (paragraphs.length > 0) {
+                // Remove Markdown bolding (**text**) for nicer display if present
+                const p1 = paragraphs[0].replace(/\*\*/g, '');
+                document.getElementById('analysis-col-1').innerHTML = `<p>${p1}</p>`;
+                
+                let remainingContent = "";
+                if (paragraphs.length > 1) {
+                    remainingContent += paragraphs.slice(1).map(p => `<p class="mb-4">${p.replace(/\*\*/g, '')}</p>`).join('');
+                }
+                
+                // Add original description to the second column if available
+                if (description) {
+                    remainingContent += `<div class="mt-8 pt-4 border-t border-primary/20 text-sm text-primary/80 italic">${description}</div>`;
+                }
+
+                document.getElementById('analysis-col-2').innerHTML = remainingContent || "<p><em>End of analysis.</em></p>";
+            } else {
+                document.getElementById('analysis-col-1').innerHTML = "<p>No analysis available.</p>";
+            }
+
+            // 6. Action Button
+            document.getElementById('view-original-btn').href = data.photo.flickr_url;
+
+            // 7. Footer Metadata
+            document.getElementById('curator-name').textContent = data.ai_analysis.model || 'AI Curator';
+            
+            if (data.photo.tags) {
+                const tags = data.photo.tags.split(' ').slice(0, 3).join(', ');
+                document.getElementById('footer-tags').textContent = tags;
+            } else {
+                 document.getElementById('footer-tags').textContent = "Unclassified";
+            }
+
+            // 8. Reveal
+            document.getElementById('loading-state').style.display = 'none';
+            const mainContent = document.getElementById('main-content');
+            mainContent.classList.remove('hidden');
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => {
+                mainContent.classList.remove('opacity-0');
+            }, 50);
+        }
+
+        // Helper to convert year to Roman Numerals
+        function toRoman(num) {
+            const roman = {
+                M: 1000, CM: 900, D: 500, CD: 400,
+                C: 100, XC: 90, L: 50, XL: 40,
+                X: 10, IX: 9, V: 5, IV: 4, I: 1
+            };
+            let str = '';
+            for (let i of Object.keys(roman)) {
+                let q = Math.floor(num / roman[i]);
+                num -= q * roman[i];
+                str += i.repeat(q);
+            }
+            return str;
+        }
+
+        // Start
+        window.addEventListener('DOMContentLoaded', loadDailyImage);
+    </script>
+</body>
+</html>
